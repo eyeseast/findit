@@ -1,1 +1,7 @@
-{}
+{
+	"title": "Massachusetts towns",
+	"description": "The Bay State is built on towns.",
+	"OBJECT_NAME": "TOWNSSURVEY_POLY",
+	"NAME_FIELD": "TOWN",
+	"ID_FIELD": "TOWN_ID"
+}

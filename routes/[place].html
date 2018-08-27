@@ -1,0 +1,79 @@
+<svelte:head>
+	<title>{metadata.title || params.place }</title>
+	<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.47.0/mapbox-gl.css' rel='stylesheet' />
+
+</svelte:head>
+
+<div ref:map></div>
+
+<style>
+ref:map {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 100%;
+}
+</style>
+
+<script>
+
+import * as topojson from 'topojson'
+
+export default {
+
+	preload({ params, query }) {
+		const { place } = params;
+
+		return Promise.all([
+			this.fetch(`${place}/${place}.topo.json`).then(r => r.json()),
+			this.fetch(`${place}/${place}.metadata.json`).then(r => r.json())
+		]).then(([topo, metadata]) => ({ topo, metadata }))
+	},
+
+	async oncreate() {
+		let mapboxgl = await import('mapbox-gl');
+
+		// TODO put this somewhere else
+		mapboxgl.config.ACCESS_TOKEN = 'pk.eyJ1IjoiY2hyaXNhbWljbyIsImEiOiJLUGZSN1RRIn0.KIM5o5IR4lBNgGCKDN6Umw';
+
+		// debugging
+		if (process.env.NODE_ENV === 'development') {
+			window.place = this;
+			window.mapboxgl = mapboxgl;
+			window.topojson = topojson;
+		}
+
+		const { topo, metadata } = this.get();
+
+		const map = this.map = new mapboxgl.Map({
+			container: this.refs.map,
+			style: 'mapbox://styles/mapbox/light-v9'
+		});
+
+		map.fitBounds(this.get().topo.bbox);
+
+		map.on('load', e => {
+
+			map.addSource('places', {
+				type: 'geojson',
+				data: topojson.feature(topo, topo.objects[metadata.OBJECT_NAME]),
+			});
+
+			map.addLayer({
+				id: 'place-boundaries',
+				type: 'fill',
+				source: 'places',
+				layout: {},
+				paint: {
+					'fill-color': '#ffff33',
+					'fill-opacity': 0.2,
+					'fill-outline-color': '#000',
+				}
+			})
+
+		})
+		
+	}
+}
+
+</script>
