@@ -1,7 +1,8 @@
 # A Makefile for making geographies
 
 GEOGRAPHIES = \
-	data/massachusetts-towns/massachusetts-towns.topo.json
+	data/massachusetts-towns/massachusetts-towns.topo.json \
+	data/massachusetts-towns/massachusetts-towns.mbtiles
 
 .PHONY: all
 all: $(GEOGRAPHIES)
@@ -27,3 +28,6 @@ data/massachusetts-towns/massachusetts-towns.metadata.json:
 data/massachusetts-towns/massachusetts-towns.topo.json: tmp/json/townsurvey_shp/TOWNSSURVEY_POLY.json data/massachusetts-towns/massachusetts-towns.metadata.json
 	mkdir -p $(dir $@)
 	npx geo2topo -o $@ $<
+
+data/massachusetts-towns/massachusetts-towns.mbtiles: tmp/json/townsurvey_shp/TOWNSSURVEY_POLY.json
+	tippecanoe -o $@ -zg --drop-densest-as-needed $<

@@ -20,7 +20,6 @@
   "devDependencies": {
     "d3-geo-projection": "^2.4.0",
     "mapbox-gl": "^0.47.0",
-    "mapshaper": "^0.4.91",
     "npm-run-all": "^4.1.2",
     "sapper": "^0.24.0",
     "svelte": "^2.15.3",

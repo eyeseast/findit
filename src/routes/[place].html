@@ -1,6 +1,6 @@
 <svelte:head>
 	<title>{metadata.title || params.place }</title>
-	<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.47.0/mapbox-gl.css' rel='stylesheet' />
+	<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.47.0/mapbox-gl.css' rel='stylesheet'>
 
 </svelte:head>
 
@@ -16,7 +16,7 @@ ref:map {
 </style>
 
 <script>
-
+//import 'mapbox-gl/dist/mapbox-gl.css'
 import * as topojson from 'topojson'
 
 export default {
@@ -24,17 +24,16 @@ export default {
 	preload({ params, query }) {
 		const { place } = params;
 
-		return Promise.all([
-			this.fetch(`${place}/${place}.topo.json`).then(r => r.json()),
-			this.fetch(`${place}/${place}.metadata.json`).then(r => r.json())
-		]).then(([topo, metadata]) => ({ topo, metadata }))
+		return this.fetch(`${place}/${place}.metadata.json`)
+			.then(r => r.json())
+			.then(metadata => ({ metadata }));
 	},
 
 	async oncreate() {
 		let mapboxgl = await import('mapbox-gl');
 
 		// TODO put this somewhere else
-		mapboxgl.config.ACCESS_TOKEN = 'pk.eyJ1IjoiY2hyaXNhbWljbyIsImEiOiJLUGZSN1RRIn0.KIM5o5IR4lBNgGCKDN6Umw';
+		mapboxgl.config.ACCESS_TOKEN = process.env.MAPBOX_ACCESS_TOKEN;
 
 		// debugging
 		if (process.env.NODE_ENV === 'development') {
@@ -43,33 +42,43 @@ export default {
 			window.topojson = topojson;
 		}
 
-		const { topo, metadata } = this.get();
+		const { metadata } = this.get();
 
 		const map = this.map = new mapboxgl.Map({
 			container: this.refs.map,
-			style: 'mapbox://styles/mapbox/light-v9'
+			style: 'mapbox://styles/mapbox/light-v9',
+			bounds: metadata.bbox,
 		});
 
-		map.fitBounds(this.get().topo.bbox);
+		if (metadata.bbox) {
+			map.fitBounds(metadata.bbox)
+		}
 
 		map.on('load', e => {
 
 			map.addSource('places', {
-				type: 'geojson',
-				data: topojson.feature(topo, topo.objects[metadata.OBJECT_NAME]),
+				type: 'vector',
+				url: `mapbox://${metadata.MAP_ID}`
 			});
 
 			map.addLayer({
-				id: 'place-boundaries',
+				'id': 'places',
 				type: 'fill',
 				source: 'places',
+				'source-layer': metadata.OBJECT_NAME,
 				layout: {},
 				paint: {
 					'fill-color': '#ffff33',
 					'fill-opacity': 0.2,
 					'fill-outline-color': '#000',
 				}
-			})
+			});
+
+			map.on('click', 'places', e => {
+				console.log(e);
+			});
+
+			//map.getSource('place-boundaries').on('load', console.log);
 
 		})
 		
