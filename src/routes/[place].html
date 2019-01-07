@@ -18,6 +18,11 @@ ref:map {
 <script>
 //import 'mapbox-gl/dist/mapbox-gl.css'
 import * as topojson from 'topojson'
+import uniq from 'lodash/uniqBy'
+import * as turf from '@turf/turf'
+
+const SOURCE_NAME = "place-boundaries";
+const LAYER_NAME = "places";
 
 export default {
 
@@ -56,15 +61,15 @@ export default {
 
 		map.on('load', e => {
 
-			map.addSource('places', {
+			map.addSource(SOURCE_NAME, {
 				type: 'vector',
 				url: `mapbox://${metadata.MAP_ID}`
 			});
 
 			map.addLayer({
-				'id': 'places',
+				'id': LAYER_NAME,
 				type: 'fill',
-				source: 'places',
+				source: SOURCE_NAME,
 				'source-layer': metadata.OBJECT_NAME,
 				layout: {},
 				paint: {
@@ -74,14 +79,28 @@ export default {
 				}
 			});
 
-			map.on('click', 'places', e => {
+			map.on('click', LAYER_NAME, e => {
 				console.log(e);
 			});
+		});
+	},
 
-			//map.getSource('place-boundaries').on('load', console.log);
+	methods: {
 
-		})
-		
+		queryPlaces(filter, unique=true) {
+			const { metadata } = this.get();
+			const features = this.map.querySourceFeatures(SOURCE_NAME, 
+				{ sourceLayer: metadata.OBJECT_NAME, filter }, 
+			);
+
+			return unique ? uniq(features, f => f.properties[metadata.NAME_FIELD]) : features;
+		},
+
+		zoomToFeature(feature) {
+			const bbox = turf.bbox(feature);
+
+			this.map.fitBounds(bbox);
+		}
 	}
 }
 
