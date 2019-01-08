@@ -1,6 +1,6 @@
 <svelte:head>
 	<title>{metadata.title || params.place }</title>
-	<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.47.0/mapbox-gl.css' rel='stylesheet'>
+	<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css' rel='stylesheet'>
 
 </svelte:head>
 
@@ -26,6 +26,12 @@ const LAYER_NAME = "places";
 
 export default {
 
+	data() {
+		return {
+			guesses: {}
+		}
+	},
+
 	preload({ params, query }) {
 		const { place } = params;
 
@@ -45,6 +51,7 @@ export default {
 			window.place = this;
 			window.mapboxgl = mapboxgl;
 			window.topojson = topojson;
+			window.turf = turf;
 		}
 
 		const { metadata } = this.get();
@@ -62,17 +69,17 @@ export default {
 		map.on('load', e => {
 
 			map.addSource(SOURCE_NAME, {
-				type: 'vector',
-				url: `mapbox://${metadata.MAP_ID}`
+				'type': 'vector',
+				'url': `mapbox://${metadata.MAP_ID}`
 			});
 
 			map.addLayer({
 				'id': LAYER_NAME,
-				type: 'fill',
-				source: SOURCE_NAME,
+				'type': 'fill',
+				'source': SOURCE_NAME,
 				'source-layer': metadata.OBJECT_NAME,
-				layout: {},
-				paint: {
+				'layout': {},
+				'paint': {
 					'fill-color': '#ffff33',
 					'fill-opacity': 0.2,
 					'fill-outline-color': '#000',
@@ -80,12 +87,25 @@ export default {
 			});
 
 			map.on('click', LAYER_NAME, e => {
-				console.log(e);
+				//console.log(e);
+
+				this.clickWithin(e);
 			});
 		});
 	},
 
 	methods: {
+
+		clickWithin(e) {
+			const { metadata } = this.get();
+			const point = turf.point(e.lngLat.toArray());
+			const feature = this.queryPlaces(null, false)
+				.find(f => turf.booleanPointInPolygon(point, f.geometry));
+
+			if (feature) {
+				console.log(feature.properties[metadata.NAME_FIELD]);				
+			}
+		},
 
 		queryPlaces(filter, unique=true) {
 			const { metadata } = this.get();

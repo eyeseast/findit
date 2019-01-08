@@ -1,9 +1,10 @@
 {
 	"title": "Massachusetts towns",
 	"description": "The Bay State is built on towns.",
+	"bbox": [[-73.65373420487616,40.964433793271894],[-69.80994507267188,43.00194183016626]],
+	"start": "BOSTON",
 	"MAP_ID": "chrisamico.acads8dp",
 	"OBJECT_NAME": "TOWNSSURVEY_POLY",
 	"NAME_FIELD": "TOWN",
-	"ID_FIELD": "TOWN_ID",
-	"bbox": [[-73.65373420487616,40.964433793271894],[-69.80994507267188,43.00194183016626]]
+	"ID_FIELD": "TOWN_ID"
 }

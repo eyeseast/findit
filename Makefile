@@ -16,10 +16,11 @@ tmp/zip/townsurvey_shp.zip:
 tmp/shp/townsurvey_shp/TOWNSSURVEY_POLY.shp: tmp/zip/townsurvey_shp.zip
 	mkdir -p $(dir $@)
 	unzip -d $(dir $@) $<
+	touch $@
 
 tmp/json/townsurvey_shp/TOWNSSURVEY_POLY.json: tmp/shp/townsurvey_shp/TOWNSSURVEY_POLY.shp
 	mkdir -p $(dir $@)
-	ogr2ogr -t_srs "EPSG:4326" -f GeoJSON -select "TOWN,TOWN_ID" "$@" "$<"
+	ogr2ogr -t_srs "EPSG:4326" -f GeoJSON -sql "SELECT TOWN,TOWN_ID FROM TOWNSSURVEY_POLY" "$@" "$<"
 
 data/massachusetts-towns/massachusetts-towns.metadata.json:
 	mkdir -p $(dir $@)
